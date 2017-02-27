@@ -5,78 +5,46 @@
     Time reduced from 1 min 53 sec to 32 sec
     Realtive Speed R = 113/32 = 3.53
 """
+from itertools import combinations
+from itertools import islice
+from itertools import count
 
-"""
-def compute_deltas(x1, x2, y1, y2, z1, z2):
-    return (x1-x2, y1-y2, z1-z2)
-    
-def compute_b(m, dt, dx, dy, dz):
-    mag = compute_mag(dt, dx, dy, dz)
-    return m * mag
 
-def compute_mag(dt, dx, dy, dz):
-    return dt * ((dx * dx + dy * dy + dz * dz) ** (-1.5))
-
-def update_vs(v1, v2, dt, dx, dy, dz, m1, m2, mag):
-    v1[0] -= dx * compute_b(m2, dt, dx, dy, dz, mag)
-    v1[1] -= dy * compute_b(m2, dt, dx, dy, dz, mag)
-    v1[2] -= dz * compute_b(m2, dt, dx, dy, dz, mag)
-    v2[0] += dx * compute_b(m1, dt, dx, dy, dz, mag)
-    v2[1] += dy * compute_b(m1, dt, dx, dy, dz, mag)
-    v2[2] += dz * compute_b(m1, dt, dx, dy, dz, mag)
-
-def update_rs(r, dt, vx, vy, vz):
-    r[0] += dt * vx
-    r[1] += dt * vy
-    r[2] += dt * vz
-"""
 def advance(dt, BODIES):
     '''
         advance the system one timestep
     '''
-
-    loop_iter = [('sun', 'jupiter'), ('sun', 'uranus'), ('sun', 'neptune'), ('sun', 'saturn'), ('jupiter', 'uranus'), ('jupiter', 'neptune'),
-                 ('jupiter', 'saturn'), ('uranus', 'neptune'), ('uranus', 'saturn'),('neptune', 'saturn')]
-
-    for (body1, body2) in loop_iter:
+    #Replaced the loop iterator of Bodies with combination from itertools
+    for (body1, body2) in combinations(BODIES.keys(), 2):
         ([x1, y1, z1], v1, m1) = BODIES[body1]
         ([x2, y2, z2], v2, m2) = BODIES[body2]
-        #(dx, dy, dz) = compute_deltas(x1, x2, y1, y2, z1, z2)
         (dx, dy, dz) = (x1-x2, y1-y2, z1-z2)
         mag = dt * (pow((dx * dx + dy * dy + dz * dz), -1.5))
         b_m1 = m1 * mag
         b_m2 = m2 * mag
-        v1[0] -= dx * b_m2 #compute_b(m2, dt, dx, dy, dz)
-        v1[1] -= dy * b_m2#compute_b(m2, dt, dx, dy, dz)
-        v1[2] -= dz * b_m2#compute_b(m2, dt, dx, dy, dz)
-        v2[0] += dx * b_m1#compute_b(m1, dt, dx, dy, dz)
-        v2[1] += dy * b_m1#compute_b(m1, dt, dx, dy, dz)
-        v2[2] += dz * b_m1#compute_b(m1, dt, dx, dy, dz)
-        #update_vs(v1, v2, dt, dx, dy, dz, m1, m2, mag)
+        v1[0] -= dx * b_m2 
+        v1[1] -= dy * b_m2
+        v1[2] -= dz * b_m2
+        v2[0] += dx * b_m1
+        v2[1] += dy * b_m1
+        v2[2] += dz * b_m1
 
     for body in BODIES.keys():
         (r, [vx, vy, vz], m) = BODIES[body]
         r[0] += dt * vx
         r[1] += dt * vy
         r[2] += dt * vz
-        #update_rs(r, dt, vx, vy, vz)
 
-def compute_energy(m1, m2, dx, dy, dz):
-    return (m1 * m2) / pow((dx * dx + dy * dy + dz * dz), 0.5)
-    
+
 def report_energy(BODIES, e=0.0):
     '''
         compute the energy and return it so that it can be printed
     '''        
-    loop_iter = [('sun', 'jupiter'), ('sun', 'uranus'), ('sun', 'neptune'), ('sun', 'saturn'), ('jupiter', 'uranus'), ('jupiter', 'neptune'),
-                 ('jupiter', 'saturn'), ('uranus', 'neptune'), ('uranus', 'saturn'),('neptune', 'saturn')]
-
-    for (body1, body2) in loop_iter:
+    #Replaced the loop iterator of Bodies with combination from itertools
+    for (body1, body2) in combinations(BODIES.keys(), 2):        
         ((x1, y1, z1), v1, m1) = BODIES[body1]
         ((x2, y2, z2), v2, m2) = BODIES[body2]
-        #(dx, dy, dz) = compute_deltas(x1, x2, y1, y2, z1, z2)
         (dx, dy, dz) = (x1-x2, y1-y2, z1-z2)
-        #e -= compute_energy(m1, m2, dx, dy, dz)
         e -= (m1 * m2) / ((dx * dx + dy * dy + dz * dz) ** 0.5)
 
     for body in BODIES.keys():
@@ -152,13 +120,14 @@ def nbody(loops, reference, iterations):
 
     # Set up global state
     offset_momentum(BODIES[reference], BODIES)
-
-    for _ in range(loops):
-        #report_energy()
-        for _ in range(iterations):
+    
+    # Replaced range with count and islice methods
+    for _ in islice(count(), loops):
+        for _ in islice(count(), iterations):
             advance(0.01, BODIES)
         print(report_energy(BODIES))
 
 if __name__ == '__main__':
-    import timeit
-    print('Time taken :' + str(timeit.timeit(nbody(100, 'sun', 20000))))
+    #import timeit
+    #print('Time taken :' + str(timeit.timeit(nbody(100, 'sun', 20000))))
+	nbody(100, 'sun', 20000)
