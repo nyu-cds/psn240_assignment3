@@ -4,6 +4,8 @@
     Recuced funtion call overheads.
     Time reduced from 1 min 53 sec to 32 sec
     Realtive Speed R = 113/32 = 3.53
+    Added combinations to run all the bodies through iterator
+    Added count & islice to replace for loops with fixed iterations
 """
 from itertools import combinations
 from itertools import islice
