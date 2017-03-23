@@ -97,6 +97,9 @@ cdef double PI = 3.14159265358979323
 cdef double SOLAR_MASS = 4 * PI * PI
 cdef float DAYS_PER_YEAR = 365.24
     
+'''
+Created a new structure for Bodies object
+'''
 cdef struct System:
         #np.ndarray[np.float64_t, ndim=1] position, velocity
         float position[3]
