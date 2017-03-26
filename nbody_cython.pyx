@@ -3,16 +3,20 @@
     Changed all the varaibles to cdef
     Changed the function arguments to C type
     Used numpy array with efficient indexing
+    Removed bounds check for each method
     Time reduced from 40sec to 20 sec
-    Realtive Speed R = 40/20 = 2
+    Realtive Speed R = 40/21 = 2
 """
 
 from itertools import combinations
 import numpy as np
+cimport numpy as cnp
+cimport cython
 
 '''
 Created numpy arrays with efficient indexing
 '''
+@cython.boundscheck(False)
 cdef advance(double dt, System* BODIES):
     '''
         advance the system one timestep
@@ -48,17 +52,18 @@ cdef advance(double dt, System* BODIES):
         #update_rs(r, dt, vx, vy, vz)
 
 
-    
+@cython.boundscheck(False)    
 cdef report_energy(System* BODIES, double e=0.0):
     '''
         compute the energy and return it so that it can be printed
     '''        
-    #cdef double m, m1, m2
+    cdef double m, m1, m2, dx, dy, dz
+    cdef cnp.ndarray[cnp.double_t, ndim=1] p1, p2
     for (body1, body2) in list(combinations(range(5),2)):
-        [x1, y1, z1] = BODIES[body1].position
+        [x1,y1,z1] = BODIES[body1].position
         v1 = BODIES[body1].velocity
         m1 = BODIES[body1].mass
-        [x2, y2, z2] = BODIES[body2].position
+        [x2,y2,z2] = BODIES[body2].position
         v2 = BODIES[body2].velocity
         m2 = BODIES[body2].mass
         #(dx, dy, dz) = compute_deltas(x1, x2, y1, y2, z1, z2)
@@ -67,13 +72,13 @@ cdef report_energy(System* BODIES, double e=0.0):
         e -= (m1 * m2) / ((dx * dx + dy * dy + dz * dz) ** 0.5)
 
     for body in range(sizeof(BODIES)):
-        [vx,vy,vz] = BODIES[body].velocity
+        v = BODIES[body].velocity
         m = BODIES[body].mass
-        e += m * (vx * vx + vy * vy + vz * vz) / 2.
+        e += m * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) / 2.
         
     return e
 
-
+@cython.boundscheck(False)
 cdef offset_momentum(System ref, System* BODIES, double px=0.0,double py=0.0,double pz=0.0):
     '''
         ref is the body in the center of the system
@@ -109,6 +114,7 @@ cdef struct System:
 '''
 Changed all the variables to cdef, Created a new Bodies object with struct.
 '''
+@cython.boundscheck(False)
 def nbody(int loops, str reference, int iterations):
     '''
         nbody simulation
@@ -120,44 +126,44 @@ def nbody(int loops, str reference, int iterations):
        
     cdef double PI = 3.14159265358979323
     cdef double SOLAR_MASS = 4 * PI * PI
-    cdef float DAYS_PER_YEAR = 365.24
+    cdef double DAYS_PER_YEAR = 365.24
     
     cdef System BODIES2[5] 
     
-    BODIES2[0].position = np.array([0.0, 0.0, 0.0], dtype=np.float) #[0.0, 0.0, 0.0]#
-    BODIES2[0].velocity = np.array([0.0, 0.0, 0.0], dtype=np.float)#[0.0, 0.0, 0.0]
+    BODIES2[0].position = [0.0, 0.0, 0.0]
+    BODIES2[0].velocity = [0.0, 0.0, 0.0]
     BODIES2[0].mass = SOLAR_MASS
     
-    BODIES2[1].position = np.array([4.84143144246472090e+00,
+    BODIES2[1].position = [4.84143144246472090e+00,
                      -1.16032004402742839e+00,
-                     -1.03622044471123109e-01], dtype=np.float)
-    BODIES2[1].velocity = np.array([1.66007664274403694e-03 * DAYS_PER_YEAR,
+                     -1.03622044471123109e-01]
+    BODIES2[1].velocity = [1.66007664274403694e-03 * DAYS_PER_YEAR,
                      7.69901118419740425e-03 * DAYS_PER_YEAR,
-                     -6.90460016972063023e-05 * DAYS_PER_YEAR], dtype=np.float)
+                     -6.90460016972063023e-05 * DAYS_PER_YEAR]
     BODIES2[1].mass = 9.54791938424326609e-04 * SOLAR_MASS
     
-    BODIES2[2].position = np.array([8.34336671824457987e+00,
+    BODIES2[2].position = [8.34336671824457987e+00,
                     4.12479856412430479e+00,
-                    -4.03523417114321381e-01], dtype=np.float)
-    BODIES2[2].velocity = np.array([-2.76742510726862411e-03 * DAYS_PER_YEAR,
+                    -4.03523417114321381e-01]
+    BODIES2[2].velocity = [-2.76742510726862411e-03 * DAYS_PER_YEAR,
                     4.99852801234917238e-03 * DAYS_PER_YEAR,
-                    2.30417297573763929e-05 * DAYS_PER_YEAR], dtype=np.float)
+                    2.30417297573763929e-05 * DAYS_PER_YEAR]
     BODIES2[2].mass = 2.85885980666130812e-04 * SOLAR_MASS
     
-    BODIES2[3].position = np.array([1.28943695621391310e+01,
+    BODIES2[3].position = [1.28943695621391310e+01,
                     -1.51111514016986312e+01,
-                    -2.23307578892655734e-01], dtype=np.float)
-    BODIES2[3].velocity = np.array([2.96460137564761618e-03 * DAYS_PER_YEAR,
+                    -2.23307578892655734e-01]
+    BODIES2[3].velocity = [2.96460137564761618e-03 * DAYS_PER_YEAR,
                     2.37847173959480950e-03 * DAYS_PER_YEAR,
-                    -2.96589568540237556e-05 * DAYS_PER_YEAR], dtype=np.float)
+                    -2.96589568540237556e-05 * DAYS_PER_YEAR]
     BODIES2[3].mass = 4.36624404335156298e-05 * SOLAR_MASS
     
-    BODIES2[4].position = np.array([1.53796971148509165e+01,
+    BODIES2[4].position = [1.53796971148509165e+01,
                      -2.59193146099879641e+01,
-                     1.79258772950371181e-01], dtype=np.float)
-    BODIES2[4].velocity = np.array([2.68067772490389322e-03 * DAYS_PER_YEAR,
+                     1.79258772950371181e-01]
+    BODIES2[4].velocity = [2.68067772490389322e-03 * DAYS_PER_YEAR,
                      1.62824170038242295e-03 * DAYS_PER_YEAR,
-                     -9.51592254519715870e-05 * DAYS_PER_YEAR], dtype=np.float)
+                     -9.51592254519715870e-05 * DAYS_PER_YEAR]
     BODIES2[4].mass = 5.15138902046611451e-05 * SOLAR_MASS
     
     
