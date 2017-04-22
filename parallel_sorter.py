@@ -1,5 +1,5 @@
 '''
-    Takes array size and created unsorted array and sorts it
+    Creates a unsorted array(size is entered by user) and sorts it
 '''    
 
 import numpy as np
